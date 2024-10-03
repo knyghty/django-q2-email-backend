@@ -33,7 +33,7 @@ readme = "README.rst"
 version = "0.1.0"
 
 [project.optional-dependencies]
-test = ["coverage"]
+test = ["coverage[toml]"]
 
 [project.urls]
 Homepage = "https://github.com/knyghty/django-q2-email-backend"
