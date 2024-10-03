@@ -27,14 +27,14 @@ Installation
 
     INSTALLED_APPS = (
         # other apps
-        'django_q2_email_backend',
+        "django_q2_email_backend",
     )
 
 You must then set django-q2-email-backend as your ``EMAIL_BACKEND``:
 
 .. code-block:: python
 
-    EMAIL_BACKEND = 'django_q2_email_backend.backends.Q2EmailBackend'
+    EMAIL_BACKEND = "django_q2_email_backend.backends.Q2EmailBackend"
 
 By default django-q2-email-backend will use Django's builtin ``SMTP`` email backend
 for the actual sending of the mail. If you'd like to use another backend, you
