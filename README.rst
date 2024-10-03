@@ -2,7 +2,7 @@
 Django Q2 Email Backend
 =======================
 
-An asynchronous Django email backend for Django Q2
+An asynchronous Django email backend for Dgjango Q2
 
 ------------
 Requirements
@@ -30,7 +30,9 @@ Installation
         'django_q2_email_backend',
     )
 
-You must then set django-q2-email-backend as your ``EMAIL_BACKEND``::
+You must then set django-q2-email-backend as your ``EMAIL_BACKEND``:
+
+.. code-block:: python
 
     EMAIL_BACKEND = 'django_q2_email_backend.backends.Q2EmailBackend'
 
