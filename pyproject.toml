@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+authors = [{ "name" = "Tom Carrick", "email" = "tom@carrick.eu" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Email",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = ["django", "django-q2"]
+description = "An asynchronous Django email backend for Django Q2"
+license = { "file" = "LICENSE" }
+name = "django-q2-email-backend"
+readme = "README.rst"
+version = "0.1.0"
+
+[project.optional-dependencies]
+test = ["coverage"]
+
+[project.urls]
+Homepage = "https://github.com/knyghty/django-q2-email-backend"
+Repository = "https://github.com/knyghty/django-q2-email-backend"
+
+[tool.coverage.run]
+branch = true
+source = ["."]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/tests", "requirements.txt", "runtests.py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["django_q2_email_backend"]
+
+[tool.ruff]
+target-version = "py38"
+
+[tool.ruff.lint]
+ignore = ["ISC001"]
+select = [
+    "ASYNC",
+    "B",
+    "BLE",
+    "C4",
+    "C90",
+    "DJ",
+    "E",
+    "ERA",
+    "EXE",
+    "F",
+    "FA",
+    "FLY",
+    "G",
+    "I",
+    "INP",
+    "INT",
+    "ISC",
+    "N",
+    "PERF",
+    "PGH",
+    "PIE",
+    "PTH",
+    "PYI",
+    "RET",
+    "RSE",
+    "RUF",
+    "S",
+    "SIM",
+    "SLOT",
+    "T10",
+    "T20",
+    "TCH",
+    "TRY",
+    "UP",
+    "W",
+    "YTT",
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
