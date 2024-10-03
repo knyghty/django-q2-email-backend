@@ -12,6 +12,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  UV_SYSTEM_PYTHON: 1
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -43,7 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -r pyproject.toml --extra test
+          uv pip install -r pyproject.tomlg --extra test
           uv pip install -e .
           uv pip install django~=${{ matrix.django-version }}
       - name: Run tests
