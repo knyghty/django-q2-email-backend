@@ -2,14 +2,14 @@
 Django Q2 Email Backend
 =======================
 
-An asynchronous Django email backend for django-q2
+An asynchronous Django email backend for Django Q2
 
 ------------
 Requirements
 ------------
 
 * `Django <https://www.djangoproject.com/>`_
-* `Django-Q2 <https://github.com/django-q2/django-q2>`_
+* `Django Q2 <https://github.com/django-q2/django-q2>`_
 
 ------------
 Installation
