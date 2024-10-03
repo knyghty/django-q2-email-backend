@@ -3,8 +3,6 @@ from django.core.mail import EmailMultiAlternatives
 
 
 def to_dict(email_message):
-    if not isinstance(email_message, EmailMessage):
-        return email_message
     email_message_data = {
         "cc": email_message.cc,
         "subject": email_message.subject,

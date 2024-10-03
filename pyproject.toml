@@ -24,6 +24,7 @@ classifiers = [
     "Topic :: Communications :: Email",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 dependencies = ["django", "django-q2"]
 description = "An asynchronous Django email backend for Django Q2"

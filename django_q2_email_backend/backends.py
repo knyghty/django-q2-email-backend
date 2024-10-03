@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.core.mail import EmailMessage
 from django.core.mail import get_connection
 from django.core.mail.backends.base import BaseEmailBackend
 from django_q.tasks import async_task
