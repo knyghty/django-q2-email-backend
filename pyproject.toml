@@ -31,7 +31,7 @@ description = "An asynchronous Django email backend for Django Q2"
 license = { "file" = "LICENSE" }
 name = "django-q2-email-backend"
 readme = "README.rst"
-version = "0.1.0"
+version = "0.2.0"
 
 [project.optional-dependencies]
 test = ["coverage[toml]"]
