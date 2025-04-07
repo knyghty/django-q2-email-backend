@@ -2,7 +2,7 @@
 Django Q2 Email Backend
 =======================
 
-An asynchronous Django email backend for Dgjango Q2
+An asynchronous Django email backend for Django Q2
 
 ------------
 Requirements
