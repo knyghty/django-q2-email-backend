@@ -5,12 +5,12 @@ build-backend = "hatchling.build"
 [project]
 authors = [{ "name" = "Tom Carrick", "email" = "tom@carrick.eu" }]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Web Environment",
     "Framework :: Django",
     "Framework :: Django :: 4.2",
-    "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -30,7 +30,7 @@ description = "An asynchronous Django email backend for Django Q2"
 license = { "file" = "LICENSE" }
 name = "django-q2-email-backend"
 readme = "README.rst"
-version = "0.2.0"
+version = "1.0.0"
 
 [project.optional-dependencies]
 test = ["coverage[toml]"]
