@@ -32,8 +32,8 @@ readme = "README.rst"
 requires-python = ">=3.10"
 version = "1.0.0"
 
-[project.optional-dependencies]
-test = ["coverage[toml]"]
+[dependency-groups]
+test = ["coverage[toml]", "django-stubs", "ruff", "ty"]
 
 [project.urls]
 Homepage = "https://github.com/knyghty/django-q2-email-backend"
@@ -52,6 +52,7 @@ packages = ["django_q2_email_backend"]
 [tool.ruff.lint]
 ignore = ["ISC001"]
 select = [
+    "ANN",
     "ASYNC",
     "B",
     "BLE",

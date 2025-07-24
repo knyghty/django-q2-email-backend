@@ -40,7 +40,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -r pyproject.toml --extra test
+          uv pip install -r pyproject.toml --group test
           uv pip install -e .
           uv pip install django~=${{ matrix.django-version }}.0
       - name: Run tests

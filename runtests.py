@@ -6,7 +6,7 @@ import django
 from django.test.runner import DiscoverRunner
 
 
-def main():
+def main() -> None:
     os.environ["DJANGO_SETTINGS_MODULE"] = "tests.settings"
     django.setup()
     test_runner = DiscoverRunner(verbosity=3)
