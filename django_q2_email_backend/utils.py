@@ -1,4 +1,3 @@
-import django
 from django.core.mail import EmailMessage
 from django.core.mail import EmailMultiAlternatives
 
@@ -17,17 +16,11 @@ def to_dict(email_message):
     }
     if isinstance(email_message, EmailMultiAlternatives):
         email_message_data["alternatives"] = email_message.alternatives
-        if django.VERSION >= (5, 2):
-            email_message_data["alternatives"] = [
-                (content, mimetype) for content, mimetype in email_message.alternatives
-            ]
     return email_message_data
 
 
 def from_dict(email_message_data):
     kwargs = dict(email_message_data)
     if alternatives := kwargs.pop("alternatives", None):
-        if django.VERSION >= (5, 2):
-            alternatives = [(content, mimetype) for content, mimetype in alternatives]
         return EmailMultiAlternatives(alternatives=alternatives, **kwargs)
     return EmailMessage(**kwargs)
