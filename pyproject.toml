@@ -16,7 +16,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -30,6 +29,7 @@ description = "An asynchronous Django email backend for Django Q2"
 license = { "file" = "LICENSE" }
 name = "django-q2-email-backend"
 readme = "README.rst"
+requires-python = ">=3.10"
 version = "1.0.0"
 
 [project.optional-dependencies]
@@ -48,9 +48,6 @@ exclude = ["/tests", "requirements.txt", "runtests.py"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["django_q2_email_backend"]
-
-[tool.ruff]
-target-version = "py39"
 
 [tool.ruff.lint]
 ignore = ["ISC001"]
