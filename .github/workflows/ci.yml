@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        django-version: ["4.2.0", "5.1.0", "5.2.0"]
+        django-version: ["4.2", "5.1", "5.2"]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         exclude:
-          - django-version: "5.1.0"
+          - django-version: "5.1"
             python-version: "3.9"
-          - django-version: "5.2.0"
+          - django-version: "5.2"
             python-version: "3.9"
-          - django-version: "5.2.0"
+          - django-version: "5.2"
             python-version: "3.10"
     steps:
       - name: Set up Python ${{ matrix.python-version }}
@@ -46,7 +46,7 @@ jobs:
         run: |
           uv pip install -r pyproject.toml --extra test
           uv pip install -e .
-          uv pip install django~=${{ matrix.django-version }}
+          uv pip install django~=${{ matrix.django-version }}.0
       - name: Run tests
         run: python -m coverage run runtests.py
       - name: Generate coverage report
