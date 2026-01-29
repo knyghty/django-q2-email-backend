@@ -17,6 +17,16 @@ Q2_EMAIL_BACKEND = getattr(
     settings, "Q2_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
 )
 
+def send_message(
+    serialized_email_message: "EmailMessageData",
+    init_kwargs: dict[str, Any],
+) -> None:
+    email_message = utils.from_dict(serialized_email_message)
+    email_message.connection = get_connection(
+        backend=Q2_EMAIL_BACKEND, **init_kwargs
+    )
+    email_message.send()
+
 
 class Q2EmailBackend(BaseEmailBackend):
     def __init__(
@@ -31,13 +41,10 @@ class Q2EmailBackend(BaseEmailBackend):
         num_sent = 0
         for email_message in email_messages:
             serialized_email_message = utils.to_dict(email_message)
-            async_task(self.send_message, serialized_email_message)
+            async_task(
+                "django_q2_email_backend.backends.send_message",
+                serialized_email_message,
+                self.init_kwargs,
+            )
             num_sent += 1
         return num_sent
-
-    def send_message(self, serialized_email_message: "EmailMessageData") -> None:
-        email_message = utils.from_dict(serialized_email_message)
-        email_message.connection = get_connection(
-            backend=Q2_EMAIL_BACKEND, **self.init_kwargs
-        )
-        email_message.send()
