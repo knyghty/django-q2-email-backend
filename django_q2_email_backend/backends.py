@@ -17,14 +17,13 @@ Q2_EMAIL_BACKEND = getattr(
     settings, "Q2_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
 )
 
+
 def send_message(
     serialized_email_message: "EmailMessageData",
     init_kwargs: dict[str, Any],
 ) -> None:
     email_message = utils.from_dict(serialized_email_message)
-    email_message.connection = get_connection(
-        backend=Q2_EMAIL_BACKEND, **init_kwargs
-    )
+    email_message.connection = get_connection(backend=Q2_EMAIL_BACKEND, **init_kwargs)
     email_message.send()
 
 
