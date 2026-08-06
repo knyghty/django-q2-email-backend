@@ -3,6 +3,7 @@ from typing import Any
 
 import django
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.backends.base import BaseEmailBackend
 from django_q.tasks import async_task
@@ -38,7 +39,6 @@ def send_message(
 class Q2EmailBackend(BaseEmailBackend):
     def __init__(
         self,
-        fail_silently: bool = False,
         *,
         using: str | None = None,
         **kwargs: Any,  # NOQA: ANN401
@@ -61,8 +61,13 @@ class Q2EmailBackend(BaseEmailBackend):
                 raise InvalidMailer(msg, alias=alias)
             super().__init__(**kwargs)
         else:
+            if using is not None:
+                msg = "The 'using' option requires Django 6.1 and a MAILERS setting."
+                raise ImproperlyConfigured(msg)
             self.init_kwargs = kwargs
-            super().__init__(fail_silently)
+            # Passing fail_silently to BaseEmailBackend is deprecated as of
+            # Django 6.1, and warns even when it is the default.
+            super().__init__()
 
     def send_messages(self, email_messages: list["EmailMessage"]) -> int:
         num_sent = 0

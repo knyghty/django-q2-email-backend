@@ -1,9 +1,11 @@
+import warnings
 from email.message import MIMEPart
 from email.mime.text import MIMEText
 from unittest import skipIf
 
 import django
 from django.core import mail
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.test import override_settings
 
@@ -38,6 +40,17 @@ class TestEmailBackend(TestCase):
             "from_email": "foo@example.com",
             "to": ["bar@example.com"],
         }
+
+    def test_no_deprecation_warnings(self) -> None:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            Q2EmailBackend()
+
+        self.assertEqual([str(warning.message) for warning in caught], [])
+
+    def test_using_requires_mailers(self) -> None:
+        with self.assertRaises(ImproperlyConfigured):
+            Q2EmailBackend(using="locmem")
 
     def test_send_email(self) -> None:
         message = mail.EmailMessage(**self.message_data)
