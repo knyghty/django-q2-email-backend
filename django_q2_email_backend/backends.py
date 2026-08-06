@@ -46,12 +46,19 @@ class Q2EmailBackend(BaseEmailBackend):
         self.using = using
         self.init_kwargs: dict[str, Any] = {}
         if django.VERSION >= (6, 1) and hasattr(settings, "MAILERS"):
+            alias = kwargs.get("alias")
             if using is None:
                 msg = (
                     "Q2EmailBackend requires a 'using' option naming the MAILERS "
                     "alias to send messages with."
                 )
-                raise InvalidMailer(msg, alias=kwargs.get("alias"))
+                raise InvalidMailer(msg, alias=alias)
+            if using == alias:
+                msg = f"The 'using' option must not name this mailer, {using!r}."
+                raise InvalidMailer(msg, alias=alias)
+            if using not in settings.MAILERS:
+                msg = f"The 'using' option names an unconfigured mailer, {using!r}."
+                raise InvalidMailer(msg, alias=alias)
             super().__init__(**kwargs)
         else:
             self.init_kwargs = kwargs

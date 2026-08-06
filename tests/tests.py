@@ -32,6 +32,10 @@ class TestEmailBackend(TestCase):
         num_sent = self.backend.send_messages([message])
 
         self.assertEqual(num_sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "Subject")
+        self.assertEqual(mail.outbox[0].body, "Message")
+        self.assertEqual(mail.outbox[0].to, ["bar@example.com"])
 
     def test_send_html_email(self) -> None:
         message = mail.EmailMultiAlternatives(**self.message_data)
@@ -40,6 +44,18 @@ class TestEmailBackend(TestCase):
         num_sent = self.backend.send_messages([message])
 
         self.assertEqual(num_sent, 1)
+        self.assertEqual(mail.outbox[0].alternatives, [("<p>HTML</p>", "text/html")])
+
+    def test_send_email_with_attachment(self) -> None:
+        message = mail.EmailMessage(**self.message_data)
+        message.attach("hello.txt", "Hello", "text/plain")
+
+        num_sent = self.backend.send_messages([message])
+
+        self.assertEqual(num_sent, 1)
+        self.assertEqual(
+            mail.outbox[0].attachments, [("hello.txt", "Hello", "text/plain")]
+        )
 
 
 @skipIf(django.VERSION < (6, 1), "MAILERS was added in Django 6.1")
@@ -59,10 +75,22 @@ class TestMailers(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, "Subject")
 
-    def test_using_is_required(self) -> None:
-        mailers = {"default": {"BACKEND": MAILERS["default"]["BACKEND"]}}
+    def assert_invalid_using(self, using: str | None) -> None:
+        options = {"using": using} if using is not None else {}
+        mailers = {
+            "default": {"BACKEND": MAILERS["default"]["BACKEND"], "OPTIONS": options}
+        }
         with (
             override_settings(MAILERS=mailers),
             self.assertRaises(mail.InvalidMailer),
         ):
             _ = mail.mailers["default"]
+
+    def test_using_is_required(self) -> None:
+        self.assert_invalid_using(None)
+
+    def test_using_must_not_be_self(self) -> None:
+        self.assert_invalid_using("default")
+
+    def test_using_must_be_configured(self) -> None:
+        self.assert_invalid_using("nonexistent")
