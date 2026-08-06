@@ -57,6 +57,10 @@ the mailer that will do the actual sending in the worker:
 ``using`` is required, as the worker would otherwise send through ``default``
 and queue the message again.
 
+Let the queue drain before adding ``MAILERS``. Tasks queued beforehand name no
+mailer, and Django refuses to build a backend from the deprecated settings once
+``MAILERS`` exists, so a worker that has it cannot send them.
+
 Django 6.0 and earlier
 ~~~~~~~~~~~~~~~~~~~~~~
 
