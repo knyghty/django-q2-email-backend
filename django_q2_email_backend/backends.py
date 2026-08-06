@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING
 from typing import Any
 
+import django
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.backends.base import BaseEmailBackend
 from django_q.tasks import async_task
@@ -21,20 +23,33 @@ Q2_EMAIL_BACKEND = getattr(
 def send_message(
     serialized_email_message: "EmailMessageData",
     init_kwargs: dict[str, Any],
+    using: str | None = None,
 ) -> None:
     email_message = utils.from_dict(serialized_email_message)
-    email_message.connection = get_connection(backend=Q2_EMAIL_BACKEND, **init_kwargs)
-    email_message.send()
+    if using is not None:
+        email_message.send(using=using)
+        return
+    connection = get_connection(backend=Q2_EMAIL_BACKEND, **init_kwargs)
+    connection.send_messages([email_message])
 
 
 class Q2EmailBackend(BaseEmailBackend):
     def __init__(
         self,
-        fail_silently: bool = False,
+        *,
+        using: str | None = None,
         **kwargs: Any,  # NOQA: ANN401
     ) -> None:
-        super().__init__(fail_silently)
+        self.using = using
+        self.init_kwargs: dict[str, Any] = {}
+        if django.VERSION >= (6, 1) and hasattr(settings, "MAILERS"):
+            super().__init__(**kwargs)
+            return
+        if using is not None:
+            msg = "The 'using' option requires Django 6.1 and a MAILERS setting."
+            raise ImproperlyConfigured(msg)
         self.init_kwargs = kwargs
+        super().__init__()
 
     def send_messages(self, email_messages: list["EmailMessage"]) -> int:
         num_sent = 0
@@ -44,6 +59,7 @@ class Q2EmailBackend(BaseEmailBackend):
                 "django_q2_email_backend.backends.send_message",
                 serialized_email_message,
                 self.init_kwargs,
+                self.using,
             )
             num_sent += 1
         return num_sent

@@ -30,7 +30,44 @@ Installation
         "django_q2_email_backend",
     )
 
-You must then set django-q2-email-backend as your ``EMAIL_BACKEND``:
+-------------
+Configuration
+-------------
+
+Django 6.1 and later
+~~~~~~~~~~~~~~~~~~~~
+
+Django 6.1 replaced the ``EMAIL_*`` settings with ``MAILERS``. Add
+``Q2EmailBackend`` as your ``default`` mailer, with a ``using`` option naming
+the mailer that will do the actual sending in the worker:
+
+.. code-block:: python
+
+    MAILERS = {
+        "default": {
+            "BACKEND": "django_q2_email_backend.backends.Q2EmailBackend",
+            "OPTIONS": {"using": "smtp"},
+        },
+        "smtp": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {"host": "smtp.example.com", "use_tls": True},
+        },
+    }
+
+``using`` is required, as the worker would otherwise send through ``default``
+and queue the message again.
+
+``fail_silently`` belongs on the mailer named by ``using``, which is the one
+that sends. A silenced failure there leaves a successful task and no email.
+
+Let the queue drain before adding ``MAILERS``. Tasks queued beforehand name no
+mailer, and Django refuses to build a backend from the deprecated settings once
+``MAILERS`` exists, so a worker that has it cannot send them.
+
+Django 6.0 and earlier
+~~~~~~~~~~~~~~~~~~~~~~
+
+Set django-q2-email-backend as your ``EMAIL_BACKEND``:
 
 .. code-block:: python
 
@@ -43,6 +80,9 @@ may set it in ``Q2_EMAIL_BACKEND`` just like you would normally have set
 procedure will most likely be to get your email working using only Django, then
 change ``EMAIL_BACKEND`` to ``Q2_EMAIL_BACKEND``, and then add the new
 ``EMAIL_BACKEND`` setting from above.
+
+``EMAIL_BACKEND`` and ``Q2_EMAIL_BACKEND`` are ignored if ``MAILERS`` is
+defined, and stop working in Django 7.0.
 
 
 Credits
