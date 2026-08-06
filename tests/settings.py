@@ -25,4 +25,4 @@ Q_CLUSTER = {
 }
 
 EMAIL_BACKEND = "django_q2_email_backend.backends.Q2EmailBackend"
-Q2_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+Q2_EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
