@@ -19,5 +19,6 @@ if TYPE_CHECKING:
 
     class OptionalEmailMessageData(TypedDict, total=False):
         alternatives: list[tuple[str, str]] | None
+        encoding: str | None
 
     class EmailMessageData(RequiredEmailMessageData, OptionalEmailMessageData): ...
