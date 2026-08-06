@@ -1,3 +1,5 @@
+from email.message import MIMEPart
+from email.mime.text import MIMEText
 from unittest import skipIf
 
 import django
@@ -6,6 +8,16 @@ from django.test import TestCase
 from django.test import override_settings
 
 from django_q2_email_backend.backends import Q2EmailBackend
+
+
+def make_mime_attachment() -> MIMEPart | MIMEText:
+    # MIMEBase attachments are deprecated as of Django 6.0.
+    if django.VERSION >= (6, 0):
+        attachment = MIMEPart()
+        attachment.set_content("Hello")
+        return attachment
+    return MIMEText("Hello")
+
 
 MAILERS = {
     "default": {
@@ -55,6 +67,38 @@ class TestEmailBackend(TestCase):
         self.assertEqual(num_sent, 1)
         self.assertEqual(
             mail.outbox[0].attachments, [("hello.txt", "Hello", "text/plain")]
+        )
+
+    def test_send_email_with_mime_attachment(self) -> None:
+        message = mail.EmailMessage(**self.message_data)
+        message.attach(make_mime_attachment())
+
+        num_sent = self.backend.send_messages([message])
+
+        self.assertEqual(num_sent, 1)
+        sent = mail.outbox[0]
+        self.assertEqual(len(sent.attachments), 1)
+        self.assertIn("Hello", sent.message().as_string())
+
+    def test_send_email_with_addresses_and_headers(self) -> None:
+        message = mail.EmailMessage(
+            **self.message_data,
+            cc=["cc@example.com"],
+            bcc=["bcc@example.com"],
+            reply_to=["reply@example.com"],
+            headers={"X-Custom": "value"},
+        )
+
+        num_sent = self.backend.send_messages([message])
+
+        self.assertEqual(num_sent, 1)
+        sent = mail.outbox[0]
+        self.assertEqual(sent.cc, ["cc@example.com"])
+        self.assertEqual(sent.bcc, ["bcc@example.com"])
+        self.assertEqual(sent.reply_to, ["reply@example.com"])
+        self.assertEqual(sent.extra_headers, {"X-Custom": "value"})
+        self.assertEqual(
+            sent.recipients(), ["bar@example.com", "cc@example.com", "bcc@example.com"]
         )
 
 
