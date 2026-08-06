@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.backends.base import BaseEmailBackend
+from django.utils.module_loading import import_string
 from django_q.tasks import async_task
 
 from . import utils
@@ -54,11 +55,16 @@ class Q2EmailBackend(BaseEmailBackend):
                     "alias to send messages with."
                 )
                 raise InvalidMailer(msg, alias=alias)
-            if using == alias:
-                msg = f"The 'using' option must not name this mailer, {using!r}."
-                raise InvalidMailer(msg, alias=alias)
             if using not in settings.MAILERS:
                 msg = f"The 'using' option names an unconfigured mailer, {using!r}."
+                raise InvalidMailer(msg, alias=alias)
+            target = settings.MAILERS[using].get("BACKEND")
+            try:
+                target_class = import_string(target) if target else None
+            except ImportError:
+                target_class = None
+            if target_class is not None and issubclass(target_class, Q2EmailBackend):
+                msg = f"The 'using' option must not name a queued mailer, {using!r}."
                 raise InvalidMailer(msg, alias=alias)
             super().__init__(**kwargs)
         else:
@@ -66,8 +72,6 @@ class Q2EmailBackend(BaseEmailBackend):
                 msg = "The 'using' option requires Django 6.1 and a MAILERS setting."
                 raise ImproperlyConfigured(msg)
             self.init_kwargs = kwargs
-            # Passing fail_silently to BaseEmailBackend is deprecated as of
-            # Django 6.1, and warns even when it is the default.
             super().__init__()
             self.fail_silently = fail_silently
 

@@ -13,7 +13,6 @@ from django_q2_email_backend.backends import Q2EmailBackend
 
 
 def make_mime_attachment() -> MIMEPart | MIMEText:
-    # MIMEBase attachments are deprecated as of Django 6.0.
     if django.VERSION >= (6, 0):
         attachment = MIMEPart()
         attachment.set_content("Hello")
@@ -151,3 +150,15 @@ class TestMailers(TestCase):
 
     def test_using_must_be_configured(self) -> None:
         self.assert_invalid_using("nonexistent")
+
+    def test_using_must_not_be_another_queued_mailer(self) -> None:
+        backend = MAILERS["default"]["BACKEND"]
+        mailers = {
+            "default": {"BACKEND": backend, "OPTIONS": {"using": "other"}},
+            "other": {"BACKEND": backend, "OPTIONS": {"using": "default"}},
+        }
+        with (
+            override_settings(MAILERS=mailers),
+            self.assertRaises(mail.InvalidMailer),
+        ):
+            _ = mail.mailers["default"]
