@@ -18,6 +18,7 @@ def to_dict(email_message: EmailMessage) -> dict[str, str]:
         "attachments": email_message.attachments,
         "headers": email_message.extra_headers,
         "reply_to": email_message.reply_to,
+        "encoding": email_message.encoding,
     }
     if isinstance(email_message, EmailMultiAlternatives):
         email_message_data["alternatives"] = email_message.alternatives
@@ -26,6 +27,10 @@ def to_dict(email_message: EmailMessage) -> dict[str, str]:
 
 def from_dict(email_message_data: "EmailMessageData") -> EmailMessage:
     kwargs = dict(email_message_data)
+    encoding = kwargs.pop("encoding", None)
     if alternatives := kwargs.pop("alternatives", None):
-        return EmailMultiAlternatives(alternatives=alternatives, **kwargs)
-    return EmailMessage(**kwargs)
+        email_message = EmailMultiAlternatives(alternatives=alternatives, **kwargs)
+    else:
+        email_message = EmailMessage(**kwargs)
+    email_message.encoding = encoding
+    return email_message
