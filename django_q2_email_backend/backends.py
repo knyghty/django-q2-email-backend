@@ -1,12 +1,16 @@
 from typing import TYPE_CHECKING
 from typing import Any
 
+import django
 from django.conf import settings
 from django.core.mail import get_connection
 from django.core.mail.backends.base import BaseEmailBackend
 from django_q.tasks import async_task
 
 from . import utils
+
+if django.VERSION >= (6, 1):
+    from django.core.mail import InvalidMailer
 
 if TYPE_CHECKING:
     from django.core.mail import EmailMessage
@@ -21,20 +25,37 @@ Q2_EMAIL_BACKEND = getattr(
 def send_message(
     serialized_email_message: "EmailMessageData",
     init_kwargs: dict[str, Any],
+    using: str | None = None,
 ) -> None:
     email_message = utils.from_dict(serialized_email_message)
-    email_message.connection = get_connection(backend=Q2_EMAIL_BACKEND, **init_kwargs)
-    email_message.send()
+    if using is not None:
+        email_message.send(using=using)
+        return
+    connection = get_connection(backend=Q2_EMAIL_BACKEND, **init_kwargs)
+    connection.send_messages([email_message])
 
 
 class Q2EmailBackend(BaseEmailBackend):
     def __init__(
         self,
         fail_silently: bool = False,
+        *,
+        using: str | None = None,
         **kwargs: Any,  # NOQA: ANN401
     ) -> None:
-        super().__init__(fail_silently)
-        self.init_kwargs = kwargs
+        self.using = using
+        self.init_kwargs: dict[str, Any] = {}
+        if django.VERSION >= (6, 1) and hasattr(settings, "MAILERS"):
+            if using is None:
+                msg = (
+                    "Q2EmailBackend requires a 'using' option naming the MAILERS "
+                    "alias to send messages with."
+                )
+                raise InvalidMailer(msg, alias=kwargs.get("alias"))
+            super().__init__(**kwargs)
+        else:
+            self.init_kwargs = kwargs
+            super().__init__(fail_silently)
 
     def send_messages(self, email_messages: list["EmailMessage"]) -> int:
         num_sent = 0
@@ -44,6 +65,7 @@ class Q2EmailBackend(BaseEmailBackend):
                 "django_q2_email_backend.backends.send_message",
                 serialized_email_message,
                 self.init_kwargs,
+                self.using,
             )
             num_sent += 1
         return num_sent
