@@ -10,9 +10,6 @@ from django_q.tasks import async_task
 
 from . import utils
 
-if django.VERSION >= (6, 1):
-    from django.core.mail import InvalidMailer
-
 if TYPE_CHECKING:
     from django.core.mail import EmailMessage
 
@@ -46,28 +43,13 @@ class Q2EmailBackend(BaseEmailBackend):
         self.using = using
         self.init_kwargs: dict[str, Any] = {}
         if django.VERSION >= (6, 1) and hasattr(settings, "MAILERS"):
-            alias = kwargs.get("alias")
-            if using is None:
-                msg = (
-                    "Q2EmailBackend requires a 'using' option naming the MAILERS "
-                    "alias to send messages with."
-                )
-                raise InvalidMailer(msg, alias=alias)
-            if using == alias:
-                msg = f"The 'using' option must not name this mailer, {using!r}."
-                raise InvalidMailer(msg, alias=alias)
-            if using not in settings.MAILERS:
-                msg = f"The 'using' option names an unconfigured mailer, {using!r}."
-                raise InvalidMailer(msg, alias=alias)
             super().__init__(**kwargs)
-        else:
-            if using is not None:
-                msg = "The 'using' option requires Django 6.1 and a MAILERS setting."
-                raise ImproperlyConfigured(msg)
-            self.init_kwargs = kwargs
-            # Passing fail_silently to BaseEmailBackend is deprecated as of
-            # Django 6.1, and warns even when it is the default.
-            super().__init__()
+            return
+        if using is not None:
+            msg = "The 'using' option requires Django 6.1 and a MAILERS setting."
+            raise ImproperlyConfigured(msg)
+        self.init_kwargs = kwargs
+        super().__init__()
 
     def send_messages(self, email_messages: list["EmailMessage"]) -> int:
         num_sent = 0

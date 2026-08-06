@@ -6,15 +6,16 @@ from unittest import skipIf
 import django
 from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
+from django.test import SimpleTestCase
 from django.test import TestCase
 from django.test import override_settings
 
 from django_q2_email_backend import utils
 from django_q2_email_backend.backends import Q2EmailBackend
+from django_q2_email_backend.checks import check_using_options
 
 
 def make_mime_attachment() -> MIMEPart | MIMEText:
-    # MIMEBase attachments are deprecated as of Django 6.0.
     if django.VERSION >= (6, 0):
         attachment = MIMEPart()
         attachment.set_content("Hello")
@@ -22,9 +23,11 @@ def make_mime_attachment() -> MIMEPart | MIMEText:
     return MIMEText("Hello")
 
 
+QUEUED = "django_q2_email_backend.backends.Q2EmailBackend"
+
 MAILERS = {
     "default": {
-        "BACKEND": "django_q2_email_backend.backends.Q2EmailBackend",
+        "BACKEND": QUEUED,
         "OPTIONS": {"using": "locmem"},
     },
     "locmem": {"BACKEND": "django.core.mail.backends.locmem.EmailBackend"},
@@ -151,22 +154,54 @@ class TestMailers(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, "Subject")
 
-    def assert_invalid_using(self, using: str | None) -> None:
-        options = {"using": using} if using is not None else {}
-        mailers = {
-            "default": {"BACKEND": MAILERS["default"]["BACKEND"], "OPTIONS": options}
-        }
-        with (
-            override_settings(MAILERS=mailers),
-            self.assertRaises(mail.InvalidMailer),
-        ):
-            _ = mail.mailers["default"]
+
+@skipIf(django.VERSION < (6, 1), "MAILERS was added in Django 6.1")
+class TestChecks(SimpleTestCase):
+    def assert_error(self, mailers: dict[str, object], error_id: str) -> None:
+        with override_settings(MAILERS=mailers):
+            errors = check_using_options(None)
+
+        self.assertEqual([error.id for error in errors], [error_id])
+
+    def test_valid(self) -> None:
+        with override_settings(MAILERS=MAILERS):
+            self.assertEqual(check_using_options(None), [])
+
+    def test_no_mailers(self) -> None:
+        self.assertEqual(check_using_options(None), [])
+
+    def test_backend_that_is_not_a_class(self) -> None:
+        with override_settings(MAILERS={"default": {"BACKEND": "os.path.join"}}):
+            self.assertEqual(check_using_options(None), [])
 
     def test_using_is_required(self) -> None:
-        self.assert_invalid_using(None)
-
-    def test_using_must_not_be_self(self) -> None:
-        self.assert_invalid_using("default")
+        self.assert_error(
+            {"default": {"BACKEND": QUEUED}},
+            "q2_email_backend.E001",
+        )
 
     def test_using_must_be_configured(self) -> None:
-        self.assert_invalid_using("nonexistent")
+        self.assert_error(
+            {"default": {"BACKEND": QUEUED, "OPTIONS": {"using": "nonexistent"}}},
+            "q2_email_backend.E002",
+        )
+
+    def test_using_must_not_be_self(self) -> None:
+        self.assert_error(
+            {"default": {"BACKEND": QUEUED, "OPTIONS": {"using": "default"}}},
+            "q2_email_backend.E003",
+        )
+
+    def test_using_must_not_be_another_queued_mailer(self) -> None:
+        with override_settings(
+            MAILERS={
+                "default": {"BACKEND": QUEUED, "OPTIONS": {"using": "other"}},
+                "other": {"BACKEND": QUEUED, "OPTIONS": {"using": "default"}},
+            }
+        ):
+            errors = check_using_options(None)
+
+        self.assertEqual(
+            [error.id for error in errors],
+            ["q2_email_backend.E003", "q2_email_backend.E003"],
+        )
