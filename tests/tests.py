@@ -2,6 +2,7 @@ import warnings
 from email.message import MIMEPart
 from email.mime.text import MIMEText
 from unittest import skipIf
+from unittest.mock import patch
 
 import django
 from django.core import mail
@@ -19,6 +20,8 @@ def make_mime_attachment() -> MIMEPart | MIMEText:
         return attachment
     return MIMEText("Hello")
 
+
+TARGET_ASYNC_TASK = "django_q2_email_backend.backends.async_task"
 
 MAILERS = {
     "default": {
@@ -49,6 +52,21 @@ class TestEmailBackend(TestCase):
     def test_using_requires_mailers(self) -> None:
         with self.assertRaises(ImproperlyConfigured):
             Q2EmailBackend(using="locmem")
+
+    def test_fail_silently_reaches_the_worker(self) -> None:
+        backend = Q2EmailBackend(fail_silently=True)
+
+        self.assertEqual(backend.init_kwargs, {"fail_silently": True})
+
+    def test_queueing_failure_always_raises(self) -> None:
+        message = mail.EmailMessage(**self.message_data)
+        backend = Q2EmailBackend(fail_silently=True)
+
+        with (
+            patch(TARGET_ASYNC_TASK, side_effect=OSError("broker is down")),
+            self.assertRaises(OSError),
+        ):
+            backend.send_messages([message])
 
     def test_send_email(self) -> None:
         message = mail.EmailMessage(**self.message_data)

@@ -72,8 +72,10 @@ class Q2EmailBackend(BaseEmailBackend):
                 msg = "The 'using' option requires Django 6.1 and a MAILERS setting."
                 raise ImproperlyConfigured(msg)
             self.init_kwargs = kwargs
+            if fail_silently:
+                self.init_kwargs["fail_silently"] = True
             super().__init__()
-            self.fail_silently = fail_silently
+        self.fail_silently = fail_silently
 
     def send_messages(self, email_messages: list["EmailMessage"]) -> int:
         num_sent = 0
