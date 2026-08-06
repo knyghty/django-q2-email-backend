@@ -59,11 +59,7 @@ jobs:
           uv pip install -e .
           uv pip install django~=${{ matrix.django-version }}.0
       - name: Run tests
-        run: python -m coverage run runtests.py
-      - name: Generate coverage report
-        run: python -m coverage xml
-      - name: Coveralls
-        uses: coverallsapp/github-action@v2
+        run: python runtests.py
 
   checks:
     if: always()
