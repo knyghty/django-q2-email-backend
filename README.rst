@@ -60,10 +60,6 @@ and queue the message again.
 ``fail_silently`` belongs on the mailer named by ``using``, which is the one
 that sends. A silenced failure there leaves a successful task and no email.
 
-Let the queue drain before adding ``MAILERS``. Tasks queued beforehand name no
-mailer, and Django refuses to build a backend from the deprecated settings once
-``MAILERS`` exists, so a worker that has it cannot send them.
-
 Django 6.0 and earlier
 ~~~~~~~~~~~~~~~~~~~~~~
 
